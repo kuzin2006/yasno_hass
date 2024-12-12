@@ -1,0 +1,10 @@
+{
+  "domain": "yasno_hass",
+  "name": "Yasno Power",
+  "documentation": "https://github.com/kuzin2006/yasno_hass/blob/master/README.md",
+  "requirements": ["pydantic", "requests"],
+  "dependencies": ["binary_sensor"],
+  "codeowners": ["@kuzin2006"],
+  "config_flow": true,
+  "version": "0.0.0-MVP"
+}

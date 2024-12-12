@@ -1,0 +1,54 @@
+{
+  "title": "Yasno Outages",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Yasno Outages Settings",
+        "data": {
+          "city": "Please select your city:",
+          "group": "Please select your group:"
+        }
+      },
+        "data_description": {
+          "group": "You can find your group at: https://yasno.com.ua"
+        }
+      }
+    },
+  "options": {
+    "step": {
+      "user": {
+        "title": "Yasno Outages Settings",
+        "data": {
+          "city": "Please select your city:"
+        }
+      },
+      "group": {
+        "title": "Yasno Outages Settings",
+        "data": {
+          "group": "Please select your group:"
+        },
+        "data_description": {
+          "group": "You can find your group at: https://yasno.com.ua"
+        }
+      }
+    }
+  },
+  "selector": {
+    "city": {
+      "options": {
+        "kiev": "Kyiv",
+        "dnipro": "Dnipro"
+      }
+    },
+    "group": {
+      "options": {
+        "1": "Group 1",
+        "2": "Group 2",
+        "3": "Group 3",
+        "4": "Group 4",
+        "5": "Group 5",
+        "6": "Group 6"
+      }
+    }
+  }
+}
