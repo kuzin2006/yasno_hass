@@ -29,18 +29,28 @@ Sample API response (parsed part):
             "today": {
               "title": "Вівторок, 10.12.2024 на 00:00",
               "groups": {
-                "1": [
+                "1.1": [
                   {
-                    "start": 13,
-                    "end": 14,
+                    "start": 8,
+                    "end": 8.5,
                     "type": "DEFINITE_OUTAGE"
                   },
                   {
-                    "start": 14,
-                    "end": 15,
+                    "start": 8.5,
+                    "end": 9,
                     "type": "DEFINITE_OUTAGE"
                   },
                   ...
+                  {
+                    "start": 10.5,
+                    "end": 11,
+                    "type": "DEFINITE_OUTAGE"
+                  },
+                  {
+                    "start": 18,
+                    "end": 18.5,
+                    "type": "DEFINITE_OUTAGE"
+                  },
                 ],
                 "2...6": [ the same ]
               }
