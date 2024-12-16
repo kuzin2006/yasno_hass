@@ -1,17 +1,21 @@
 # Home Assistant Yasno Power Outages Sensor
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from homeassistant.core import callback
-from homeassistant.components.calendar import CalendarEntity, CalendarEvent
+from homeassistant.components.calendar import CalendarEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_utils
 
 from .const import CONF_GROUPS, CONF_CITY
 
-from .models import DailyGroupSchedule, SensorEntityData, YasnoOutage
+from .models import (
+    DailyGroupSchedule,
+    SensorEntityData,
+    YasnoCalendarEvent,
+)
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,28 +53,18 @@ class YasnoCalendarEntity(CoordinatorEntity, CalendarEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"{self._name}_{'today' if self._today else 'tomorrow'}_{self.city}_group_{self.group}"  # `calendar.yasno_power_today_kiev_group_2`
+        return f"{self._name}_{'today' if self._today else 'tomorrow'}_{self.city}_group_{self.group}"  # `calendar.yasno_power_today_kiev_group_2_1`
 
     @property
     def available(self) -> bool:
         return self._schedule.title != "Data unavailable"
 
-    def _to_event(self, outage: YasnoOutage) -> CalendarEvent:
-        now = dt_utils.now()
-        start_date = now.replace(hour=outage.start, minute=0, second=0, microsecond=0)
-        end_date = now.replace(hour=outage.end, minute=0, second=0, microsecond=0)
-
-        if not self._today:
-            start_date += timedelta(days=1)
-            end_date += timedelta(days=1)
-        return CalendarEvent(start=start_date, end=end_date, summary="Outage")
-
     @property
-    def event(self) -> CalendarEvent | None:
+    def event(self) -> YasnoCalendarEvent | None:
         """Return the current event."""
         for outage in self._schedule.schedule:
-            if outage.start <= dt_utils.now().hour <= outage.end:
-                return self._to_event(outage)
+            if outage.start <= dt_utils.now() <= outage.end:
+                return YasnoCalendarEvent(start=outage.start, end=outage.end)
         return None
 
     async def async_get_events(
@@ -78,9 +72,12 @@ class YasnoCalendarEntity(CoordinatorEntity, CalendarEntity):
         hass,
         start_date: datetime,
         end_date: datetime,
-    ) -> list[CalendarEvent]:
+    ) -> list[YasnoCalendarEvent]:
         """Return calendar events within a datetime range."""
-        return [self._to_event(outage) for outage in self._schedule.schedule]
+        return [
+            YasnoCalendarEvent(start=outage.start, end=outage.end)
+            for outage in self._schedule.schedule
+        ]
 
     @property
     def extra_state_attributes(self):

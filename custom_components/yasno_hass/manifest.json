@@ -6,5 +6,5 @@
   "dependencies": ["binary_sensor"],
   "codeowners": ["@kuzin2006"],
   "config_flow": true,
-  "version": "0.0.0-MVP"
+  "version": "0.0.1-MVP"
 }

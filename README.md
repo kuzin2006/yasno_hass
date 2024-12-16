@@ -29,17 +29,17 @@ Sample API response (parsed part):
             "today": {
               "title": "Вівторок, 10.12.2024 на 00:00",
               "groups": {
-                "1": [
-                  {
-                    "start": 13,
-                    "end": 14,
-                    "type": "DEFINITE_OUTAGE"
-                  },
-                  {
-                    "start": 14,
-                    "end": 15,
-                    "type": "DEFINITE_OUTAGE"
-                  },
+                "1.1": [
+                    {
+                      "start": 12,
+                      "end": 12.5,
+                      "type": "DEFINITE_OUTAGE"
+                    },
+                    {
+                      "start": 12.5,
+                      "end": 13,
+                      "type": "DEFINITE_OUTAGE"
+                    },
                   ...
                 ],
                 "2...6": [ the same ]

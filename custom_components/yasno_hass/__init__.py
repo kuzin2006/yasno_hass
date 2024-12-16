@@ -3,15 +3,18 @@ from datetime import timedelta
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_utils
 
 
 from .api import client as yasno_client
 from . import const
 from .models import (
-    YasnoOutage,
+    YasnoAPIOutage,
     SensorEntityData,
     DailyGroupSchedule,
     YasnoDailySchedule,
+    YasnoOutage,
+    YasnoOutageType,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,30 +49,6 @@ class YasnoCoordinator(DataUpdateCoordinator):
         except Exception as e:
             raise UpdateFailed(f"Error communicating with API: {e}") from e
 
-    @staticmethod
-    def _merge_intervals(group_schedule: list[YasnoOutage]) -> list[YasnoOutage]:
-        """
-        Merge sequential 1-hour intervals into one.
-        TODO: group by outage type (if any, later)
-        """
-        merged_schedules = list()
-        start_hour, end_hour = None, None
-        for item in group_schedule:
-            if item.start == end_hour:  # next item to be merged
-                end_hour = item.end
-            else:
-                if start_hour and end_hour:
-                    merged_schedules.append(
-                        YasnoOutage(start=start_hour, end=end_hour, type=item.type)
-                    )
-                start_hour, end_hour = item.start, item.end
-        else:
-            if start_hour and end_hour:
-                merged_schedules.append(
-                    YasnoOutage(start=start_hour, end=end_hour, type=item.type)
-                )
-        return merged_schedules
-
     def city_schedules_for_group(self, city: str, group: str) -> SensorEntityData:
         """
         Return today/tomorrow schedule with merged intervals.
@@ -83,14 +62,18 @@ class YasnoCoordinator(DataUpdateCoordinator):
             city_daily_schedule: YasnoDailySchedule = self.data[city]
             group_schedule_today = DailyGroupSchedule(
                 title=city_daily_schedule.today.title,
-                schedule=self._merge_intervals(city_daily_schedule.today.groups[group]),
+                schedule=_merge_intervals(
+                    city_daily_schedule.today.groups[group],
+                    today=True,
+                ),
             )
             if city_daily_schedule.tomorrow:
                 group_schedule_tomorrow = (
                     DailyGroupSchedule(
                         title=city_daily_schedule.tomorrow.title,
-                        schedule=self._merge_intervals(
-                            city_daily_schedule.tomorrow.groups[group]
+                        schedule=_merge_intervals(
+                            city_daily_schedule.tomorrow.groups[group],
+                            today=False,
                         ),
                     )
                     if city_daily_schedule.tomorrow
@@ -114,3 +97,54 @@ async def async_setup_entry(hass, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, const.PLATFORMS)
     # entry.async_on_unload(entry.add_update_listener(coordinator.update_config))
     return True
+
+
+def _to_datetime(val: float):
+    time_parts = [int(i) for i in str(val).split(".")]
+    assert len(time_parts) == 2, "Incorrect time input."
+
+    return dt_utils.now().replace(
+        hour=time_parts[0], minute=30 if time_parts[1] else 0, second=0, microsecond=0
+    )
+
+
+def _to_outage(
+    start: float, end: float, today: bool, type: YasnoOutageType
+) -> YasnoOutage:
+    start_dt = _to_datetime(start)
+    end_dt = _to_datetime(end)
+    if not today:
+        start_dt += timedelta(days=1)
+        end_dt += timedelta(days=1)
+    return YasnoOutage(
+        start=start_dt,
+        end=end_dt,
+        type=type,
+    )
+
+
+def _merge_intervals(
+    group_schedule: list[YasnoAPIOutage], today: bool
+) -> list[YasnoAPIOutage]:
+    """
+    Merge sequential intervals into one.
+    TODO: group by outage type (if any, later)
+    """
+    merged_schedules = list()
+    start, end = None, None
+    for item in group_schedule:
+        if item.start == end:  # next item to be merged
+            end = item.end
+        else:
+            if start and end:
+                merged_schedules.append(
+                    _to_outage(start=start, end=end, today=today, type=item.type)
+                )
+            start, end = item.start, item.end
+
+    else:
+        if start and end:
+            merged_schedules.append(
+                _to_outage(start=start, end=end, today=today, type=item.type)
+            )
+    return merged_schedules

@@ -1,13 +1,13 @@
 # Home Assistant Yasno Power Outages Sensor
 
 import logging
-from datetime import datetime
 
 from homeassistant.core import callback
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.util import dt as dt_utils
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -54,7 +54,7 @@ class YasnoBinarySensorEntity(CoordinatorEntity, BinarySensorEntity):
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         for outage in self._schedule.schedule:
-            if outage.start <= datetime.now().hour <= outage.end:
+            if outage.start <= dt_utils.now() <= outage.end:
                 return False
         return True
 
@@ -64,7 +64,7 @@ class YasnoBinarySensorEntity(CoordinatorEntity, BinarySensorEntity):
 
     @staticmethod
     def _to_time_range_str(event):
-        return f"{event.start}:00...{event.end}:00"
+        return f"{event.start.strftime('%H:%M')}...{event.end.strftime('%H:%M')}"
 
     @property
     def extra_state_attributes(self):
@@ -74,7 +74,7 @@ class YasnoBinarySensorEntity(CoordinatorEntity, BinarySensorEntity):
             current_outage_event = [
                 outage
                 for outage in self._schedule.schedule
-                if outage.start <= datetime.now().hour <= outage.end
+                if outage.start <= dt_utils.now() <= outage.end
             ]
 
             if current_outage_event:
@@ -85,7 +85,7 @@ class YasnoBinarySensorEntity(CoordinatorEntity, BinarySensorEntity):
         next_outage_event = [
             outage
             for outage in self._schedule.schedule
-            if outage.start > datetime.now().hour
+            if outage.start > dt_utils.now()
         ]
         if not next_outage_event:
             next_outage = "Not today"
