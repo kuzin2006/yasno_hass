@@ -9,8 +9,8 @@ class YasnoOutageType(StrEnum):
 
 
 class YasnoOutage(BaseModel):
-    start: int
-    end: int
+    start: float
+    end: float
     type: YasnoOutageType
 
 
@@ -42,6 +42,6 @@ class DailyGroupSchedule(BaseModel):
 
 
 class SensorEntityData(BaseModel):
-    group: int
+    group: str
     today: DailyGroupSchedule
     tomorrow: Optional[DailyGroupSchedule]

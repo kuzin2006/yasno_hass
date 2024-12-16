@@ -49,7 +49,7 @@ class YasnoCoordinator(DataUpdateCoordinator):
     @staticmethod
     def _merge_intervals(group_schedule: list[YasnoOutage]) -> list[YasnoOutage]:
         """
-        Merge sequential 1-hour intervals into one.
+        Merge sequential 0.5-hour intervals into one.
         TODO: group by outage type (if any, later)
         """
         merged_schedules = list()

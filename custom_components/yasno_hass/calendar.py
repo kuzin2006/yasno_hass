@@ -31,7 +31,7 @@ class YasnoCalendarEntity(CoordinatorEntity, CalendarEntity):
         self._schedule: DailyGroupSchedule = DailyGroupSchedule()
 
         self._attr_unique_id = (
-            f"yasno_calendar_{'today' if today else 'tomorrow'}_{city}_group_{group}"
+            f"yasno_calendar_{'today' if today else 'tomorrow'}_{city}_group_{group.replace('.', '_')}"
         )
 
     @callback
@@ -49,7 +49,7 @@ class YasnoCalendarEntity(CoordinatorEntity, CalendarEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"{self._name}_{'today' if self._today else 'tomorrow'}_{self.city}_group_{self.group}"  # `calendar.yasno_power_today_kiev_group_2`
+        return f"{self._name}_{'today' if self._today else 'tomorrow'}_{self.city}_group_{self.group.replace('.', '_')}"  # `calendar.yasno_power_today_kiev_group_2_1`
 
     @property
     def available(self) -> bool:
@@ -57,8 +57,8 @@ class YasnoCalendarEntity(CoordinatorEntity, CalendarEntity):
 
     def _to_event(self, outage: YasnoOutage) -> CalendarEvent:
         now = dt_utils.now()
-        start_date = now.replace(hour=outage.start, minute=0, second=0, microsecond=0)
-        end_date = now.replace(hour=outage.end, minute=0, second=0, microsecond=0)
+        start_date = now.replace(hour=int(outage.start), minute=30 if (outage.start % 1) > 0 else 0, second=0, microsecond=0)
+        end_date = now.replace(hour=int(outage.end), minute=30 if (outage.end % 1) > 0 else 0, second=0, microsecond=0)
 
         if not self._today:
             start_date += timedelta(days=1)

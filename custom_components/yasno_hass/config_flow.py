@@ -53,7 +53,7 @@ class YasnoConfigFlow(ConfigFlow, domain=const.DOMAIN):
             ),
             vol.Required(const.CONF_GROUPS): SelectSelector(
                 SelectSelectorConfig(
-                    options=[str(i) for i in range(1, const.YASNO_GROUPS + 1)],
+                    options=[str(i)+"."+str(j) for i in range(1, const.YASNO_GROUPS + 1) for j in range(1, const.YASNO_SUBGROUPS + 1)],
                     translation_key="group",
                     multiple=True,
                     mode=SelectSelectorMode.LIST,

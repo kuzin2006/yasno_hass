@@ -33,7 +33,7 @@ class YasnoBinarySensorEntity(CoordinatorEntity, BinarySensorEntity):
         self.group = group
         self._schedule: DailyGroupSchedule = DailyGroupSchedule()
 
-        self._attr_unique_id = f"yasno_binary_sensor_{city}_group_{group}"
+        self._attr_unique_id = f"yasno_binary_sensor_{city}_group_{group.replace('.', '_')}"
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -48,7 +48,7 @@ class YasnoBinarySensorEntity(CoordinatorEntity, BinarySensorEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"{self._name}_{self.city}_group_{self.group}"  # `binary_sensor.yasno_power_today_kiev_group_2`
+        return f"{self._name}_{self.city}_group_{self.group.replace('.', '_')}"  # `binary_sensor.yasno_power_today_kiev_group_2_1`
 
     @property
     def is_on(self) -> bool | None:
@@ -64,7 +64,7 @@ class YasnoBinarySensorEntity(CoordinatorEntity, BinarySensorEntity):
 
     @staticmethod
     def _to_time_range_str(event):
-        return f"{event.start}:00...{event.end}:00"
+        return f"{int(event.start)}:{"30" if (event.start%1)>0 else "00"}...{int(event.end)}:{"30" if (event.end%1)>0 else "00"}"
 
     @property
     def extra_state_attributes(self):
