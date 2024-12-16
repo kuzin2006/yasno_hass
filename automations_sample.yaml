@@ -1,0 +1,64 @@
+# Sample automations to use with integration
+
+- alias: Morning Outages Agenda
+  triggers:
+    - trigger: time
+      at: "05:30:00"
+  actions:
+    - action: calendar.get_events
+      target:
+        entity_id:
+          - calendar.yasno_power_today_kiev_group_2_1
+      data:
+        start_date_time: "{{ now().replace(hour=0, minute=0, second=0, microsecond=0) }}"
+        duration:
+          days: 1
+      response_variable: agenda
+    - action: notify.family
+      data:
+        title: "*Power Outages for today, {{ now().date() }}.*"
+        message: >       
+          *Home:*
+          
+          {% for event in agenda["calendar.yasno_power_today_kiev_group_2_1"]["events"] %}
+          {{ as_timestamp(event.start) | timestamp_custom('%H:%M') }}..{{ as_timestamp(event.end) | timestamp_custom('%H:%M') }}         
+          {% endfor %}
+
+- alias: Tomorrow Outages Agenda
+  triggers:
+    - trigger: state
+      entity_id: calendar.yasno_power_tomorrow_kiev_group_2_1
+      from: "unavailable"
+      not_to: "unknown"
+  actions:
+    - action: calendar.get_events
+      target:
+        entity_id:
+          - calendar.yasno_power_tomorrow_kiev_group_2_1
+      data:
+        start_date_time: "{{ now().replace(hour=23, minute=59, second=59, microsecond=0) }}"
+        duration:
+          days: 1
+      response_variable: agenda_tomorrow
+    - action: notify.family
+      data:
+        title: "*Power Outages for tomorrow, {{ now().date() + timedelta(days=1) }}.*"
+        message: >       
+          *Home:*
+          
+          {% for event in agenda_tomorrow["calendar.yasno_power_tomorrow_kiev_group_2"]["events"] %}
+          {{ as_timestamp(event.start) | timestamp_custom('%H:%M') }}..{{ as_timestamp(event.end) | timestamp_custom('%H:%M') }}         
+          {% endfor %}
+
+- alias: Outage Upcoming Event Reminder Home
+  triggers:
+    - trigger: calendar
+      entity_id: calendar.yasno_power_today_kiev_group_2_1
+      event: start
+      offset: -00:30:00
+  actions:
+    - action: notify.family
+      data:
+        title: "*Home Power outage in 30 min.*"
+        message: >       
+          *Upcoming outage:* {{ as_timestamp(trigger.calendar_event.start) | timestamp_custom('%H:%M')
