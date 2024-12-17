@@ -5,7 +5,7 @@ import requests
 
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from .models import YasnoAPIResponse
+from .models import YasnoAPIResponse, YasnoAPIComponent
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ class YasnoAPIClient:
     )
     _TEMPLATE_NAME = "electricity-outages-daily-schedule"
 
-    def update(self, force=False) -> dict:
+    def update(self, force=False) -> YasnoAPIComponent | None:
         _LOGGER.info("Performing Yasno API call...")
         try:
             resp = requests.get(self._api_url)
@@ -32,9 +32,7 @@ class YasnoAPIClient:
 
             components = YasnoAPIResponse(**resp_json).components
             daily_schedule_components = [
-                s.dailySchedule
-                for s in components
-                if s.template_name == self._TEMPLATE_NAME
+                s for s in components if s.template_name == self._TEMPLATE_NAME
             ]
             if len(daily_schedule_components) >= 1:
                 _LOGGER.debug(

@@ -58,15 +58,16 @@ class YasnoCoordinator(DataUpdateCoordinator):
         """
         group_schedule_today, group_schedule_tomorrow = None, None
 
-        if self.data:
-            city_daily_schedule: YasnoDailySchedule = self.data[city]
-            group_schedule_today = DailyGroupSchedule(
-                title=city_daily_schedule.today.title,
-                schedule=_merge_intervals(
-                    city_daily_schedule.today.groups[group],
-                    today=True,
-                ),
-            )
+        if self.data and not self.data.deprecated:
+            city_daily_schedule: YasnoDailySchedule = self.data.dailySchedule[city]
+            if city_daily_schedule.today:
+                group_schedule_today = DailyGroupSchedule(
+                    title=city_daily_schedule.today.title,
+                    schedule=_merge_intervals(
+                        city_daily_schedule.today.groups[group],
+                        today=True,
+                    ),
+                )
             if city_daily_schedule.tomorrow:
                 group_schedule_tomorrow = (
                     DailyGroupSchedule(

@@ -1,8 +1,10 @@
 # Data models
-from typing import List, Optional
+from typing import List, Optional, Annotated
 from enum import StrEnum
 from datetime import datetime
 from pydantic import BaseModel
+
+from pydantic.functional_validators import AfterValidator
 
 from homeassistant.components.calendar import CalendarEvent
 
@@ -23,16 +25,32 @@ class YasnoDailyScheduleEntity(BaseModel):
 
 
 class YasnoDailySchedule(BaseModel):
-    today: YasnoDailyScheduleEntity
+    today: Optional[YasnoDailyScheduleEntity] = None
     tomorrow: Optional[YasnoDailyScheduleEntity] = None
+
+
+def is_unix_timestamp(v: int) -> int:
+    assert v > 0, f"'{v}' is not unix timestamp."
+    return v
+
+
+UnixTimestamp = Annotated[int, AfterValidator(is_unix_timestamp)]
 
 
 class YasnoAPIComponent(BaseModel):
     template_name: str
     available_regions: List[str] = list()
     title: Optional[str] = None
-    lastRegistryUpdateTime: Optional[int] = 0
+    lastRegistryUpdateTime: Optional[UnixTimestamp] = 0
     dailySchedule: Optional[dict[str, YasnoDailySchedule]] = dict()
+
+    @property
+    def updated_at(self) -> datetime:
+        return datetime.fromtimestamp(self.lastRegistryUpdateTime)
+
+    @property
+    def deprecated(self) -> bool:
+        return datetime.now().day != self.updated_at.day
 
 
 class YasnoAPIResponse(BaseModel):
@@ -51,7 +69,7 @@ class DailyGroupSchedule(BaseModel):
 
 class SensorEntityData(BaseModel):
     group: str
-    today: DailyGroupSchedule
+    today: Optional[DailyGroupSchedule]
     tomorrow: Optional[DailyGroupSchedule]
 
 
