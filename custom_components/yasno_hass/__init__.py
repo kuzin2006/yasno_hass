@@ -104,6 +104,11 @@ def _to_datetime(val: float):
     time_parts = [int(i) for i in str(val).split(".")]
     assert len(time_parts) == 2, "Incorrect time input."
 
+    if time_parts[0] == 24:
+        return dt_utils.now().replace(
+            hour=23, minute=59, second=59, microsecond=0
+        )
+
     return dt_utils.now().replace(
         hour=time_parts[0], minute=30 if time_parts[1] else 0, second=0, microsecond=0
     )

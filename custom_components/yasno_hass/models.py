@@ -1,12 +1,16 @@
 # Data models
 from typing import List, Optional, Annotated
 from enum import StrEnum
-from datetime import datetime
+from datetime import datetime, date
 from pydantic import BaseModel
+import re
+import logging
 
 from pydantic.functional_validators import AfterValidator
 
 from homeassistant.components.calendar import CalendarEvent
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class YasnoOutageType(StrEnum):
@@ -45,12 +49,25 @@ class YasnoAPIComponent(BaseModel):
     dailySchedule: Optional[dict[str, YasnoDailySchedule]] = dict()
 
     @property
-    def updated_at(self) -> datetime:
-        return datetime.fromtimestamp(self.lastRegistryUpdateTime)
+    def date_title_today(self) -> date | None:
+        if not self.dailySchedule:
+            return None
+
+        schedule_title_today = self.dailySchedule["kiev"].today
+        # Sample title: "Понеділок, 25.12.2024 на 00:58"
+        pattern = r"\d{2}\.\d{2}\.\d{4}"
+        match = re.search(pattern, schedule_title_today.title)
+
+        if match:
+            title_date = match.group()
+            _LOGGER.debug(f"Date found in title: {title_date}")
+            return datetime.strptime(title_date, "%d.%m.%Y").date()
+
+        return None
 
     @property
     def deprecated(self) -> bool:
-        return datetime.now().day != self.updated_at.day
+        return datetime.now().date() != self.date_title_today
 
 
 class YasnoAPIResponse(BaseModel):
